@@ -66,6 +66,7 @@ class Helper:
 
                 # accumulated distance reset
                 D = 0.0
+                i += 1
 
             # not enough distance yet -> accumulate more
             else:
@@ -128,10 +129,10 @@ class Helper:
     def distance_at_best_angle(points, template_unistroke, a, b, threshold):
 
         # test angles from a to b at phi intervals with distance to template_unistroke
-        x1 = phi * a + (1.0 - phi) * b
+        x1 = PHI * a + (1.0 - PHI) * b
         f1 = Helper.distance_at_angle(points, template_unistroke, x1)
 
-        x2 = (1.0 - phi) * a + phi * b
+        x2 = (1.0 - PHI) * a + PHI * b
         f2 = Helper.distance_at_angle(points, template_unistroke, x2)
 
         # search for minimum distance until threshold is met
@@ -141,14 +142,14 @@ class Helper:
                 b = x2
                 x2 = x1
                 f2 = f1
-                x1 = phi * a + (1.0 - phi) * b
+                x1 = PHI * a + (1.0 - PHI) * b
                 f1 = Helper.distance_at_angle(points, template_unistroke, x1)
             # if f1 >= f2 -> minimum is between x1 and b -> update a to x1
             else:
                 a = x1
                 x1 = x2
                 f1 = f2
-                x2 = (1.0 - phi) * a + phi * b
+                x2 = (1.0 - PHI) * a + PHI * b
                 f2 = Helper.distance_at_angle(points, template_unistroke, x2)
 
         # return the minimum distance

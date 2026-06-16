@@ -1,3 +1,4 @@
 datasets/logs
 recognizer.js
 helper/text_extractor.py
+*.pyc

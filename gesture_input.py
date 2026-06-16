@@ -1,88 +1,107 @@
 # gesture input program for first task
 
 import pyglet
+from recognizer_helper import Point
+from recognizer import DollarRecognizer
 
 
-# points and lines are stored here
-points = []
-lines = []
+class GestureInputWindow(pyglet.window.Window):
+    def __init__(self, width=600, height=600):
+        # input field
+        super().__init__(width, height)
+        pyglet.gl.glClearColor(1, 1, 1, 1)
 
-# check if user is drawing
-drawing = False
+        # points and lines are stored here
+        self.points = []
+        self.lines = []
 
-# input field
-window = pyglet.window.Window(900, 600)
-pyglet.gl.glClearColor(1, 1, 1, 1)
+        # recognizer
+        self.recognizer = DollarRecognizer()
 
-# drawing batch
-batch = pyglet.graphics.Batch()
+        # check if user is drawing
+        self.drawing = False
 
+        # drawing batch
+        self.batch = pyglet.graphics.Batch()
 
-# clears everything
-def clear():
-    global points, lines
-    for line in lines:
-        line.delete()
-    points = []
-    lines = []
-
-
-# draw event
-@window.event
-def on_draw():
-    # clear the window and redraw the batch
-    window.clear()
-    batch.draw()
-
-
-# left mouse press starts drawing
-@window.event
-def on_mouse_press(x, y, button, modifiers):
-    global drawing, points
-    if button == pyglet.window.mouse.LEFT:
-        # clear previous drawing
-        clear()
-        # start drawing and add first point
-        drawing = True
-        points = [(x, y)]
-
-
-# mouse drag
-@window.event
-def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
-
-    # doesn't do anything if not drawing
-    if not drawing:
-        return
-
-    # previous point
-    px, py = points[-1]
-    # add new point
-    points.append((x, y))
-    # line from previous point to new point
-    lines.append(
-        pyglet.shapes.Line(
-            px, py, x, y,
-            thickness=5,
-            color=(0, 0, 0),
-            batch=batch
+        # result display
+        self.result_text = "Draw a gesture"
+        self.result_label = pyglet.text.Label(
+            self.result_text,
+            x=15,
+            y=height - 25,
+            font_size=14,
+            color=(20, 20, 20, 255),
+            batch=self.batch
         )
-    )
+
+    # clears everything
+    def clear_batch(self):
+        for line in self.lines:
+            line.delete()
+        self.points = []
+        self.lines = []
+
+    # draw event
+    def on_draw(self):
+        # clear the window and redraw the batch
+        super().clear()
+        self.batch.draw()
+
+    # left mouse press starts drawing
+    def on_mouse_press(self, x, y, button, modifiers):
+        if button == pyglet.window.mouse.LEFT:
+            # clear previous drawing
+            self.clear_batch()
+            # start drawing and add first point
+            self.drawing = True
+            self.points = [(x, y)]
+
+    # mouse drag
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        # doesn't do anything if not drawing
+        if not self.drawing:
+            return
+
+        # previous point
+        px, py = self.points[-1]
+        # add new point
+        self.points.append((x, y))
+        # line from previous point to new point
+        self.lines.append(
+            pyglet.shapes.Line(
+                px, py, x, y,
+                thickness=5,
+                color=(0, 0, 0),
+                batch=self.batch
+            )
+        )
+
+    # left mouse release stops drawing
+    def on_mouse_release(self, x, y, button, modifiers):
+        if button == pyglet.window.mouse.LEFT:
+            self.drawing = False
+
+            if self.recognizer and len(self.points) > 1:
+                candidate = [Point(px, self.height - py)
+                             for px, py in self.points]
+                result = self.recognizer.recognize(candidate)
+                self.result_text = f"Erkannt: {result.name} | Score: {result.score:.3f}"
+                self.result_label.text = self.result_text
+
+    # C key clears the drawing
+    def on_key_press(self, symbol, modifiers):
+        if symbol == pyglet.window.key.C:
+            self.clear_batch()
+            self.result_text = "Draw a gesture"
+            self.result_label.text = self.result_text
 
 
-# left mouse release stops drawing
-@window.event
-def on_mouse_release(x, y, button, modifiers):
-    global drawing
-    if button == pyglet.window.mouse.LEFT:
-        drawing = False
+# for testing
+def main():
+    GestureInputWindow()
+    pyglet.app.run()
 
 
-# C key clears the drawing
-@window.event
-def on_key_press(symbol, modifiers):
-    if symbol == pyglet.window.key.C:
-        clear()
-
-
-pyglet.app.run()
+if __name__ == "__main__":
+    main()
