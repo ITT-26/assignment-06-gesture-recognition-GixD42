@@ -1,9 +1,5 @@
-from constants import *
-from sklearn.preprocessing import StandardScaler
-from scipy.signal import resample
-from keras.models import load_model
-import numpy as np
-from pathlib import Path
+# in the beginning to suppress tensorflow logs and warnings
+
 import os
 import logging
 import warnings
@@ -14,6 +10,14 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 warnings.filterwarnings("ignore")
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
+
+
+from constants import *
+from sklearn.preprocessing import StandardScaler
+from scipy.signal import resample
+from keras.models import load_model
+import numpy as np
+from pathlib import Path
 
 
 class GestureClassifier:

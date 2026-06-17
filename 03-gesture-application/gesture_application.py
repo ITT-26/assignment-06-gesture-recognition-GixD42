@@ -1,22 +1,43 @@
 # application for task 3
 
-import pyglet
-from screens import StartScreen, BottomScreen
-from pyglet.window import mouse
-from constants import *
-from enemies import EnemyManager
+# in the beginning so that tensorflow logs and warnings are suppressed for the whole application
 import warnings
 import logging
 import os
-print("loading application...")
+import pyglet
 
 
+# loading screen while model is loading
+loading = pyglet.window.Window(300, 100, "Loading", resizable=False)
+loading.set_location(500, 300)
+
+# quick and simple loading label
+label = pyglet.text.Label(
+    "Loading model...",
+    x=150, y=50,
+    anchor_x="center", anchor_y="center",
+    font_size=16,
+)
+
+# draw loading screen
+loading.clear()
+label.draw()
+loading.flip()
+
+
+# ignore tensorflow logs and warnings
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 warnings.filterwarnings("ignore")
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
+
+
+from screens import StartScreen, BottomScreen
+from pyglet.window import mouse
+from constants import *
+from enemies import EnemyManager
 
 
 class GameWindow(pyglet.window.Window):
@@ -167,6 +188,7 @@ class GameWindow(pyglet.window.Window):
     # start the game on space press
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.SPACE:
+            # start game if it isn't running
             if not self.started:
                 self.started = True
                 self.top_screen.change_image(BACKGROUND_IMAGE)
@@ -176,5 +198,7 @@ class GameWindow(pyglet.window.Window):
 
 # run the application
 if __name__ == "__main__":
+    # close loading screen and start app
+    loading.close()
     window = GameWindow()
     pyglet.app.run()
