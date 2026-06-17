@@ -20,12 +20,19 @@ class StartScreen:
         self.image = pyglet.image.load(str(image_path))
         self.sprite = pyglet.sprite.Sprite(
             self.image, x=0, y=window.height // 2)
+        
+        # for game over screen
+        self.is_game_over = False
+        self.game_over_label = None
 
     # change displayed image
     def change_image(self, image_path):
         self.image = pyglet.image.load(str(image_path))
         self.sprite = pyglet.sprite.Sprite(
             self.image, x=0, y=self.window.height // 2)
+        
+        # this is never used for game over
+        self.is_game_over = False
 
     # show image based on spell -> scheduled to reset after some time
     def show_spell(self, spell_image_path):
@@ -36,9 +43,27 @@ class StartScreen:
     def reset_image(self, dt):
         self.change_image(BACKGROUND_IMAGE)
 
+    # show game over screen
+    def show_game_over(self, time):
+        self.change_image(GAME_OVER_IMAGE)
+        # set game over flag 
+        self.is_game_over = True
+        # game over label
+        self.game_over_label = pyglet.text.Label(
+            f"{time:.1f}",
+            x=self.window.width // 2,
+            y=SCORE_Y,
+            anchor_x="center",
+            anchor_y="center",
+            font_size=SCORE_FONT_SIZE,
+            color=SCORE_COLOR
+        )
+
     # draw the sprite
     def draw(self):
         self.sprite.draw()
+        if self.is_game_over:
+            self.game_over_label.draw()
 
 
 # represents the bottom half of the screen
@@ -173,34 +198,3 @@ class BottomScreen:
             pyglet.shapes.Line(
                 x0, y0, x1, y1, thickness=9, color=(150, 120, 80)
             ).draw()
-
-
-if __name__ == "__main__":
-    # Nur fuer Optik-Preview: Modell-Laden vermeiden
-    class _DummyClassifier:
-        def predict(self, points):
-            return None, 0.0
-
-    # Monkeypatch: BottomScreen.__init__ nutzt dann den Dummy statt echtem Modell
-    GestureClassifier = _DummyClassifier
-
-    class PreviewWindow(pyglet.window.Window):
-        def __init__(self):
-            super().__init__(800, 800, "Screens Preview", resizable=False)
-
-            # fuer cooldown-text in BottomScreen.draw()
-            self.star_countdown = 12.3
-            self.beam_countdown = 4.8
-            self.earth_countdown = 0.0
-
-            self.top_screen = StartScreen(self)
-            self.bottom_screen = BottomScreen(self)
-
-        def on_draw(self):
-            self.clear()
-            self.bottom_screen.draw()
-            self.top_screen.draw()
-
-    win = PreviewWindow()
-
-    pyglet.app.run()

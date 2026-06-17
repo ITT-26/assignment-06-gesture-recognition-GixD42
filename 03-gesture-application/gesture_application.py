@@ -4,6 +4,7 @@ import pyglet
 from screens import StartScreen, BottomScreen
 from pyglet.window import mouse
 from constants import *
+from enemies import EnemyManager
 import warnings
 import logging
 import os
@@ -41,8 +42,39 @@ class GameWindow(pyglet.window.Window):
         self.beam_countdown = 0
         self.earth_countdown = 0
 
+        # enemy manager
+        self.enemy_manager = EnemyManager()
+
+        # timer for score in game over screen
+        self.timer = 0.0
+
         # update cooldowns every 0.1 seconds
         pyglet.clock.schedule_interval(self.update_countdowns, 0.1)
+
+        # right border to let enemies spawn outside of the screen
+        self.right_border = pyglet.shapes.Rectangle(
+            RIGHT_BORDER_X, 0, BORDER_WIDTH, self.height, color=BORDER_COLOR
+        )
+
+    # update game
+    def update_game(self, dt):
+
+        # if it hasn't started don't update enemies
+        if not self.started:
+            return
+
+        self.enemy_manager.update(dt, spell_active=self.spell_active)
+
+        self.timer += dt
+
+        for enemy in self.enemy_manager.enemies:
+            if enemy.x < ENEMY_X_LOST:
+                self.top_screen.show_game_over(self.timer)
+                self.started = False
+                self.spell_active = False
+                self.enemy_manager.kill_all()
+                pyglet.clock.unschedule(self.update_game)
+                break
 
     # update cooldown timers
     def update_countdowns(self, dt):
@@ -55,6 +87,10 @@ class GameWindow(pyglet.window.Window):
         self.clear()
         self.bottom_screen.draw()
         self.top_screen.draw()
+
+        # draw enemies before border
+        self.enemy_manager.draw()
+        self.right_border.draw()
 
     # mouse events are given to bottom screen if no spell active
     def on_mouse_press(self, x, y, button, modifiers):
@@ -112,13 +148,16 @@ class GameWindow(pyglet.window.Window):
         # schedule spell unlock
         pyglet.clock.schedule_once(self.unlock_spells, SPELL_DURATION)
 
-        # set cooldowns
+        # set cooldowns and trigger spell effects
         if label == "star":
             self.star_countdown = STAR_COOLDOWN
+            self.enemy_manager.kill_all()
         elif label == "pigtail":
             self.beam_countdown = BEAM_COOLDOWN
+            self.enemy_manager.kill_all_flying()
         elif label == "delete_mark":
             self.earth_countdown = EARTH_COOLDOWN
+            self.enemy_manager.kill_all_ground()
 
     # unlock spell and input after duration
     def unlock_spells(self, dt):
@@ -131,6 +170,8 @@ class GameWindow(pyglet.window.Window):
             if not self.started:
                 self.started = True
                 self.top_screen.change_image(BACKGROUND_IMAGE)
+                self.timer = 0.0
+                pyglet.clock.schedule_interval(self.update_game, 1 / 60)
 
 
 # run the application
