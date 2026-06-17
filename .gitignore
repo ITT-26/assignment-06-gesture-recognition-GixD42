@@ -1,4 +1,4 @@
 datasets/logs
 recognizer.js
-helper/text_extractor.py
 *.pyc
+01-dollar-recognizer/helper/text_extractor.py
